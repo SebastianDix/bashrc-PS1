@@ -1,0 +1,9 @@
+CHROOT='${debian_chroot:+($debian_chroot)}'
+	PIPE=' | '	
+	USER='[\[\033[01;31m\]\u\[\033[00m\]]'
+	DIR='[\[\033[01;34m\] ${PWD} \[\033[00m\]]'
+	SPACE=' '
+	LIST='\[\033[00m\]]\n\[\033[01;33m\]`ls -a $PWD | head -8 | pr -4Tn`\[\033[00m\]\n"'
+	
+	PS1=${CHROOT}${USER}${PIPE}${DIR}${SPACE}
+
