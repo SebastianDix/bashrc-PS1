@@ -1,97 +1,53 @@
-#nginx
 server {
-	listen       80;
-	server_name hrydokapsy.cz; 
-	client_max_body_size 20m;
-	index index.php index.html index.htm;
-	root   /home/hrydokapsy/public_html;
-	location / {
-		try_files $uri $uri/ /index.php?q=$uri&$args;
-	}
-	location ~ \.php$ {
-		try_files $uri =404;
-		fastcgi_index index.php;
-		set $no_cache "";
-		if ($request_method = POST) {
-			set $no_cache 1;
-		}
-		if ($request_uri ~* "/(wp-admin/|wp-login.php)") {
-			set $no_cache 1;
-		}
-		if ($request_uri ~* "/store.*|/cart.*|/my-account.*|/checkout.*|/addons.*") {
-			set $no_cache 1;
-		}
-		if ($http_cookie ~* "wordpress_logged_in_") {
-			set $no_cache 1;
-		}
-		fastcgi_no_cache $no_cache;
-		fastcgi_cache_bypass $no_cache;
-		fastcgi_cache microcache;
-		fastcgi_cache_key $scheme$request_method$server_name$request_uri$args;
-		fastcgi_cache_valid 200 60m;
-		fastcgi_cache_valid 404 10m;
-		fastcgi_cache_use_stale updating;
-		fastcgi_pass unix:/var/run/php/hrydokapsy.sock;
-		fastcgi_pass_header Set-Cookie;
-		fastcgi_pass_header Cookie;
-		fastcgi_ignore_headers Cache-Control Expires Set-Cookie;
-		fastcgi_split_path_info ^(.+\.php)(/.+)$;
-		fastcgi_param SCRIPT_FILENAME $request_filename;
-		fastcgi_intercept_errors on;
-		include fastcgi_params;         
-	}
-	location ~* \.(js|css|png|jpg|jpeg|gif|ico|woff|ttf|svg|otf)$ {
-		expires 30d;
-		add_header Pragma public;
-		add_header Cache-Control "public";
-		access_log off;
-	}
+listen       80;
+server_name hrydokapsy.cz; 
+client_max_body_size 20m;
+index index.php index.html index.htm;
+root   /home/hrydokapsy/public_html;
+location / {
+try_files $uri $uri/ /index.php?q=$uri&$args;
 }
-# redirect http to non-www https
-server {
-	listen [::]:80;
-	listen 80;
-	server_name hrydokapsy.cz www.hrydokapsy.cz;
-
-	return 301 https://hrydokapsy.cz$request_uri;
+location ~ \.php$ {
+try_files $uri =404;
+fastcgi_index index.php;
+set $no_cache "";
+if ($request_method = POST) {
+set $no_cache 1;
 }
-
-# redirect www https to non-www https
-server {
-	listen [::]:443 ssl;
-	listen 443 ssl;
-	server_name www.hrydokapsy.cz;
-	
-	# add ssl cert w/ options
-	include /etc/nginx/includes/ssl.conf;
-	
-	return 301 https://hrydokapsy.cz$request_uri;
+if ($request_uri ~* "/(wp-admin/|wp-login.php)") {
+set $no_cache 1;
 }
-
-# serve website
+if ($request_uri ~* "/store.*|/cart.*|/my-account.*|/checkout.*|/addons.*") {
+set $no_cache 1;
+}
+if ($http_cookie ~* "wordpress_logged_in_") {
+set $no_cache 1;
+}
+fastcgi_no_cache $no_cache;
+fastcgi_cache_bypass $no_cache;
+fastcgi_cache microcache;
+fastcgi_cache_key $scheme$request_method$server_name$request_uri$args;
+fastcgi_cache_valid 200 60m;
+fastcgi_cache_valid 404 10m;
+fastcgi_cache_use_stale updating;
+fastcgi_pass unix:/var/run/php/hrydokapsy.sock;
+fastcgi_pass_header Set-Cookie;
+fastcgi_pass_header Cookie;
+fastcgi_ignore_headers Cache-Control Expires Set-Cookie;
+fastcgi_split_path_info ^(.+\.php)(/.+)$;
+fastcgi_param SCRIPT_FILENAME $request_filename;
+fastcgi_intercept_errors on;
+include fastcgi_params;         
+}
+location ~* \.(js|css|png|jpg|jpeg|gif|ico|woff|ttf|svg|otf)$ {
+expires 30d;
+add_header Pragma public;
+add_header Cache-Control "public";
+access_log off;
+}
+}
 server {
-	listen [::]:443 ssl;
-	listen 443 ssl;
-	server_name hrydokapsy.cz;
-
-	# add ssl cert w/ options
-	include /etc/nginx/includes/ssl.conf;
-
-# set the paths to your cert and key files here
-	ssl_certificate /etc/letsencrypt/live/hrydokapsy.cz/cert.pem;
-	ssl_certificate_key /etc/letsencrypt/live/hrydokapsy.cz/privkey.pem;
-
-	index index.php index.html index.htm;
-	root   /home/hrydokapsy/public_html;	
-	index index.html index.php;
-	
-	# return 404 if uri doesn't point to file or directory
-	location / {
-		try_files $uri $uri/ =404;
-	}
-	
-	# set expires rules
-	include /etc/nginx/includes/expires.conf;
-
-	include /etc/nginx/includes/common-location-rules.conf;
+listen	80;
+server_name www.hrydokapsy.cz;
+rewrite ^/(.*)$ http://hrydokapsy.cz/$1 permanent;
 }
