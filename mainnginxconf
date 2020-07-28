@@ -1,0 +1,62 @@
+user www-data;
+worker_processes auto;
+worker_rlimit_nofile 8192; # should be bigger than worker_connectinos
+pid /run/nginx.pid;
+
+events {
+	use epoll;
+	worker_connections 8000;
+	multi_accept on;
+}
+http {
+	sendfile on;
+	tcp_nopush on;
+	tcp_nodelay on;
+	
+	keepalive_timeout 30; # longer values are better for each ssl client, but take up a worker connection longer
+	types_hash_max_size 2048;
+	server_tokens off;
+	
+	# maximum file upload size
+	# update 'upload_max_filesize' & 'post_max_size' in /etc/php5/fpm/php.ini accordingly
+	client_max_body_size 32m;
+	# client_body_timeout 60s;
+	
+	# set default index file (can be overwritten for each site individually)
+	index index.html;
+	
+	# load MIME types
+	include includes/mime.types;
+	default_type application/octet-stream; # set default MIME type
+	
+	# create a php upstream handler that will be used to pass php scripts to php-fpm via a unix socket
+	# see http://nginx.org/en/docs/http/ngx_http_upstream_module.html
+	# and http://serverfault.com/a/546363
+	upstream php {
+		server unix:/var/run/php/php7.2-fpm.sock;
+		# or a <server>:<port>, e.g. localhost:9000
+	}
+	
+	# logging
+	access_log /var/log/nginx/access.log;
+	error_log /var/log/nginx/error.log;
+	
+	# turn on gzip compression by including config
+	include includes/gzip.conf;
+	
+	# enable caching of frequently used files
+	include includes/file-cache.conf;
+	
+	# disable content type sniffing for more security
+	add_header "X-Content-Type-Options" "nosniff";
+	
+	# force the latest IE version
+	add_header "X-UA-Compatible" "IE=Edge";
+	
+	# enable anti-cross-site scripting filter built into IE 8+
+	add_header "X-XSS-Protection" "1; mode=block";
+	
+	# include virtual host configs
+	include sites-enabled/*;
+}
+
