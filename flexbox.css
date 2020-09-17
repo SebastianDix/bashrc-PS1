@@ -1,0 +1,15 @@
+.vocabcontainer {
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    align-items: center;
+    text-align:center;
+
+
+
+}
+.vocabitem {
+    flex:0 50%;
+    height:30px;
+    border: 1px solid gray;
+}
